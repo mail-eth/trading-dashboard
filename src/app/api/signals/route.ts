@@ -2,25 +2,17 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    // Test simple fetch
     const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
     const data = await res.json()
     
+    // Return raw data to see what's happening
     return NextResponse.json({
-      test: 'SIGNALS_API_V2',
-      btcPrice: data.price,
-      status: res.status,
-      ok: res.ok,
-      url: res.url,
-      headers: Object.fromEntries(res.headers.entries()),
-      timestamp: new Date().toISOString()
+      raw: data,
+      message: 'raw data returned'
     })
   } catch (error) {
-    console.error('Error:', error)
     return NextResponse.json({ 
-      error: String(error),
-      test: 'SIGNALS_API_V2',
-      timestamp: new Date().toISOString()
+      error: String(error)
     }, { status: 500 })
   }
 }
