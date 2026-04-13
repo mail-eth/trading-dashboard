@@ -1,29 +1,17 @@
 import { NextResponse } from 'next/server'
-import { readFileSync } from 'fs'
-import { join } from 'path'
 
 export async function GET() {
   try {
-    // Read saved position
-    let position = null
-    try {
-      const positionPath = join(process.cwd(), 'public', 'position.json')
-      const positionData = readFileSync(positionPath, 'utf-8')
-      position = JSON.parse(positionData)
-    } catch (e) {
-      console.log('No position file found')
-    }
+    const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
+    const data = await res.json()
     
-    // Return position data (price will be fetched client-side)
     return NextResponse.json({
-      position,
+      currentPrice: data.price,
       timestamp: new Date().toISOString()
     })
   } catch (error) {
-    console.error('Error:', error)
     return NextResponse.json({ 
-      position: null,
-      timestamp: new Date().toISOString()
-    }, { status: 200 })
+      error: 'Failed to fetch'
+    }, { status: 500 })
   }
 }
