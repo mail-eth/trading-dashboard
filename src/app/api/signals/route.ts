@@ -6,9 +6,13 @@ export async function GET() {
     const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
     const data = await res.json()
     
+    console.log('Binance response:', JSON.stringify(data))
+    
     return NextResponse.json({
       test: true,
-      btcPrice: data.price,
+      btcPrice: data.price || 'NO_PRICE',
+      raw: data,
+      status: res.status,
       timestamp: new Date().toISOString()
     })
   } catch (error) {
