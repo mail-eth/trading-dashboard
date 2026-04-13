@@ -1,0 +1,42 @@
+{
+  "trades": [
+    {
+      "id": "trade-001",
+      "symbol": "BTCUSDT",
+      "direction": "LONG",
+      "status": "CLOSED",
+      "entry_price": 70500,
+      "entry_date": "2026-04-12",
+      "entry_size_usdc": 100,
+      "exit_price": 71200,
+      "exit_date": "2026-04-12",
+      "exit_reason": "Take profit hit",
+      "pnl_usdc": 9.93,
+      "pnl_pct": 9.93,
+      "thesis": "RSI oversold + MACD bullish crossover",
+      "lesson": "Good entry, hold longer next time",
+      "emotion": "calm",
+      "thesis_correct": true,
+      "execution_correct": true
+    },
+    {
+      "id": "trade-002",
+      "symbol": "ETHUSDT",
+      "direction": "LONG",
+      "status": "CLOSED",
+      "entry_price": 2200,
+      "entry_date": "2026-04-12",
+      "entry_size_usdc": 100,
+      "exit_price": 2150,
+      "exit_date": "2026-04-12",
+      "exit_reason": "Stop loss hit",
+      "pnl_usdc": -2.00,
+      "pnl_pct": -2.00,
+      "thesis": "EMA cross up",
+      "lesson": "Wait for more confirmation",
+      "emotion": "neutral",
+      "thesis_correct": false,
+      "execution_correct": true
+    }
+  ]
+}
