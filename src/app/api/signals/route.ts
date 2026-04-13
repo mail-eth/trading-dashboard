@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server'
 
-const BINANCE_API_KEY = 'aZPruzno6B1AklGIrwzvJDCHwRRFvqZSxKtgttDvqaT2Fj3qmnLkhpWqL71o8n02'
-const BINANCE_API_SECRET = 'PPyGFZoRKvkgdxOPCrv8lSnt5OQ8zRcoW7IcXiwxd1jpjqdagTcIBTWGFxVH4KIB'
-
 const WATCH_PAIRS = [
   'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'XRPUSDT',
   'ADAUSDT', 'DOGEUSDT', 'DOTUSDT', 'AVAXUSDT', 'LINKUSDT',
@@ -10,9 +7,20 @@ const WATCH_PAIRS = [
 ]
 
 async function fetchKlines(symbol: string) {
-  const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=200`
-  const res = await fetch(url)
-  return res.json()
+  try {
+    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=200`
+    const res = await fetch(url, { 
+      headers: { 'Content-Type': 'application/json' }
+    })
+    if (!res.ok) {
+      console.error(`Failed to fetch ${symbol}: ${res.status}`)
+      return null
+    }
+    return res.json()
+  } catch (error) {
+    console.error(`Error fetching ${symbol}:`, error)
+    return null
+  }
 }
 
 function calculateEMA(data: number[], period: number): number {
@@ -70,11 +78,13 @@ function calculateMACD(closes: number[]) {
 async function analyzeSymbol(symbol: string) {
   try {
     const klines = await fetchKlines(symbol)
+    if (!klines || !Array.isArray(klines) || klines.length < 50) {
+      console.error(`Invalid data for ${symbol}`)
+      return null
+    }
     
     const closes = klines.map((k: any) => parseFloat(k[4]))
     const volumes = klines.map((k: any) => parseFloat(k[5]))
-    const highs = klines.map((k: any) => parseFloat(k[2]))
-    const lows = klines.map((k: any) => parseFloat(k[3]))
     
     const currentPrice = closes[closes.length - 1]
     const avgVolume = volumes.slice(0, -1).reduce((a: number, b: number) => a + b, 0) / (volumes.length - 1)
@@ -112,6 +122,7 @@ async function analyzeSymbol(symbol: string) {
     
     const stopLoss = currentPrice * 0.98
     const takeProfit1 = currentPrice * 1.02
+    const takeProfit2 = currentPrice * 1.04
     
     return {
       symbol,
@@ -119,11 +130,13 @@ async function analyzeSymbol(symbol: string) {
       score,
       signal,
       rsi: parseFloat(rsi.toFixed(2)),
-      ema_200: parseFloat(ema200.toFixed(4)),
-      macd_histogram: parseFloat(macd.histogram.toFixed(4)),
-      volume_ratio: parseFloat(volumeRatio.toFixed(2)),
-      stop_loss: parseFloat(stopLoss.toFixed(4)),
-      take_profit_1: parseFloat(takeProfit1.toFixed(4)),
+      ema20: parseFloat(ema20.toFixed(4)),
+      ema200: parseFloat(ema200.toFixed(4)),
+      macd: parseFloat(macd.histogram.toFixed(4)),
+      volume: parseFloat(volumeRatio.toFixed(2)),
+      stopLoss: parseFloat(stopLoss.toFixed(2)),
+      takeProfit1: parseFloat(takeProfit1.toFixed(2)),
+      takeProfit2: parseFloat(takeProfit2.toFixed(2)),
       reasons
     }
   } catch (error) {
@@ -134,11 +147,13 @@ async function analyzeSymbol(symbol: string) {
 
 export async function GET() {
   try {
+    console.log('Starting signal analysis...')
     const results = await Promise.all(
       WATCH_PAIRS.map(pair => analyzeSymbol(pair))
     )
     
     const signals = results.filter(Boolean).sort((a: any, b: any) => b.score - a.score)
+    console.log(`Found ${signals.length} signals`)
     
     return NextResponse.json({
       timestamp: new Date().toISOString(),
@@ -147,6 +162,6 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Error in signals API:', error)
-    return NextResponse.json({ error: 'Failed to fetch signals' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to fetch signals', details: String(error) }, { status: 500 })
   }
 }
